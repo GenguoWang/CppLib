@@ -2,8 +2,6 @@
 #include <list>
 #include <vector>
 #include <queue>
-#include <set>
-#include <map>
 #include <utility>
 #include <algorithm>
 #include <stdlib.h>
@@ -38,12 +36,10 @@ private:
 	int time;
 public:
 	typedef pair<int,int> tPair;
-	typedef map<tPair,int> tMap;
     typedef vector<Vertex> tV;
     typedef list<Edge> tE;
     typedef tV::iterator tVIter;
     typedef tE::iterator tEIter;
-	tMap weight;
 	static const int MAXINT = 0x3ffffff;
 	int * shortest;
 	vector<Vertex> vertex;
