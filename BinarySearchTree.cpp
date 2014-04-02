@@ -1,10 +1,13 @@
 #include <iostream>
 #include <stdlib.h>
+#include <stack>
 using namespace std;
-class BinaryTree
+namespace kingo
+{
+template<typename DataType>
+class BinarySearchTree
 {
     public:
-        typedef int DataType;
         struct node
         {
             DataType weight;
@@ -21,7 +24,7 @@ class BinaryTree
    private:
         node * mRoot;
     public:
-        BinaryTree()
+        BinarySearchTree()
         {
             mRoot = NULL;
         }
@@ -92,7 +95,7 @@ class BinaryTree
             }
             return p;
         }
-        ~BinaryTree()
+        ~BinarySearchTree()
         {
             clear(mRoot);
         }
@@ -105,23 +108,22 @@ class BinaryTree
         }
         void walkMid()
         {
-            node *temp[1000];
+            stack<node*> nodeStack;
             node *p;
-            int top = 0;
-            if(mRoot == NULL) return;
             p = mRoot;
             while(p != NULL) {
-                temp[top++] = p;
+                nodeStack.push(p);
                 p = p->left;
             }
-            while(top > 0)
+            while(!nodeStack.empty())
             {
-                p = temp[--top];
-                visit(p);
+                p = nodeStack.top();
+                nodeStack.pop();
+                visit(p);//may use callback
                 p = p->right;
                 while(p != NULL)
                 {
-                    temp[top++] = p;
+                    nodeStack.push(p);
                     p = p->left;
                 }
             }
@@ -158,6 +160,7 @@ class BinaryTree
             else
             {
                 node *p = min(pNode->right);
+                //p have no left child,for it's the min of right tree
                 if(p->parent != pNode)
                 {
                     transplant(p,p->right);
@@ -171,10 +174,11 @@ class BinaryTree
             }
         }
 };
+}
 
 int main(int argc,char ** argv)
 {
-    BinaryTree bt;
+    kingo::BinarySearchTree<int> bt;
     for(int i=0; i < 100; ++i) bt.insert(rand()%1000);
     bt.walkMid();
     cout <<"max" << bt.max()->weight << endl;
@@ -185,7 +189,7 @@ int main(int argc,char ** argv)
         cout << p->weight << endl;
         p = bt.nextNode(p);
     }*/
-    BinaryTree bb;
+    kingo::BinarySearchTree<int> bb;
     bb.insert(4);
     bb.insert(3);
     bb.insert(8);
