@@ -119,6 +119,26 @@ void testFloyd()
     assert(minCost == 868);
     fin.close();
 }
+void testMaxFlow()
+{
+    {
+        kingo::Graph graph(2);
+        graph.addEdge(0,1,100);
+        assert(graph.MaxFlow(0,1)==100);
+    }
+
+    {
+        kingo::Graph graph(4);
+        graph.addDirectEdge(0,1,10000);
+        graph.addDirectEdge(1,2,1);
+        graph.addDirectEdge(0,2,10000);
+        graph.addDirectEdge(2,3,10000);
+        graph.addDirectEdge(1,3,10000);
+        assert(graph.MaxFlow(0,3)==20000);
+        graph.addDirectEdge(0,3,10);
+        assert(graph.MaxFlowIncrment(0,3)==10);
+    }
+}
 int main(int argc,char *argv[])
 {
     cout << "test Topo..." << endl;
@@ -129,6 +149,8 @@ int main(int argc,char *argv[])
     testDijkstra();
     cout << "test Floyd..." << endl;
     testFloyd();
+    cout << "test MaxFlow..." << endl;
+    testMaxFlow();
     cout << "All Passed!" << endl;
 	return 0;
 }

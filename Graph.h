@@ -41,19 +41,22 @@ public:
     typedef tV::iterator tVIter;
     typedef tE::iterator tEIter;
 	static const int MAXINT = 0x3ffffff;
+    int numberOfVertex;
 	int * shortest;
+    int * flowMap;
 	vector<Vertex> vertex;
 	enum State{NOT_VISITED,VISITING,VISITED};
 
-	Graph(int n)
+	Graph(int n):numberOfVertex(n),flowMap(NULL)
 	{
 		vertex.resize(n);
         for(int i=0;i<n;++i) vertex[i].number=i;
-		shortest = 0;
+		shortest = NULL;
 	}
 	~Graph()
 	{
 		if(shortest) delete [] shortest;
+        if(flowMap) delete [] flowMap;
 	}
 	
 	
@@ -63,6 +66,10 @@ public:
 		edge.vertex = e;
 		edge.weight = weight;
 		vertex[s].edge.push_back(edge);
+        if(flowMap)
+        {
+            flowMap[s*numberOfVertex+e] = weight;
+        }
 	}
 
 	void addEdge(int s,int e,int weight)
@@ -77,6 +84,11 @@ public:
 		edge.vertex = s;
 		edge.weight = weight;
 		vertex[e].edge.push_back(edge);
+        if(flowMap)
+        {
+            flowMap[s*numberOfVertex+e] = weight;
+            flowMap[e*numberOfVertex+s] = weight;
+        }
 	}
     void BFS()
     {
@@ -295,6 +307,145 @@ public:
 		}
         return shortest;
 	}
+    bool MBFS(int s,int t)
+    {
+		for(tVIter it = vertex.begin(); it != vertex.end(); ++it)
+		{
+			it->state = NOT_VISITED;
+			it->dist = MAXINT;
+			it->pre = -1;
+		}
+        queue<Vertex*> q;
+        q.push(&vertex[s]);
+        vertex[s].state = VISITED;
+        vertex[s].dist = 0;
+        Vertex* currentVertex;
+        while(!q.empty())
+        {
+            currentVertex = q.front();
+            q.pop();
+            for(tEIter it = currentVertex->edge.begin();it != currentVertex->edge.end();++it)
+            {
+                Vertex &nextVertex = vertex[it->vertex];
+                if(nextVertex.state == NOT_VISITED && flowMap[currentVertex->number * numberOfVertex + nextVertex.number] > 0)
+                {
+                    q.push(&nextVertex);
+                    nextVertex.dist = currentVertex->dist+1;
+                    nextVertex.state = VISITED;
+                }
+            }
+        }
+        return vertex[t].state == VISITED;
+    }
+    int MDFS(int x,int t, int flow)
+    {
+        if(x==t || !flow) return flow;
+        int sum = 0,u;
+        Vertex &currentVertex = vertex[x];
+        for(tEIter it = currentVertex.edge.begin();it != currentVertex.edge.end();++it)
+        {
+            Vertex & nextVertex = vertex[it->vertex];
+            if(nextVertex.dist == currentVertex.dist+1 
+             && (u = MDFS(it->vertex,t,min(flow,flowMap[x*numberOfVertex+it->vertex]))) > 0)
+             {
+                flowMap[x*numberOfVertex+it->vertex] -= u;
+                flowMap[it->vertex*numberOfVertex+x] += u;
+                sum += u;
+                flow -= u;
+                if(!flow) break;
+             }
+        }
+        return sum;
+    }
+    int getAugment(int s, int t)
+    {
+		for(tVIter it = vertex.begin(); it != vertex.end(); ++it)
+		{
+			it->state = NOT_VISITED;
+			it->dist = MAXINT;
+			it->pre = -1;
+		}
+        queue<Vertex*> q;
+        q.push(&vertex[s]);
+        vertex[s].state = VISITED;
+        Vertex* currentVertex;
+        while(!q.empty())
+        {
+            currentVertex = q.front();
+            q.pop();
+            if(currentVertex->number == t) break;
+            for(tEIter it = currentVertex->edge.begin();it != currentVertex->edge.end();++it)
+            {
+                Vertex &nextVertex = vertex[it->vertex];
+                if(nextVertex.state == NOT_VISITED && flowMap[currentVertex->number * numberOfVertex + nextVertex.number] > 0)
+                {
+                    q.push(&nextVertex);
+                    nextVertex.pre = currentVertex->number;
+                    nextVertex.state = VISITED;
+                }
+            }
+        }
+        if(vertex[t].pre == -1) return -1;
+        int augment = MAXINT;
+        int node = t,flow,pre;
+        while((pre=vertex[node].pre) != -1)
+        {
+            flow = flowMap[pre*numberOfVertex+node];
+            if(flow < augment) augment = flow;
+            node = pre;
+        }
+        node = t;
+        while((pre=vertex[node].pre) != -1)
+        {
+            flowMap[pre*numberOfVertex+node] -= augment;
+            flowMap[node*numberOfVertex+pre] += augment;
+            node = pre;
+        }
+        return augment;
+    }
+    int MaxFlowIncrment(int s,int t)
+    {
+        return MaxFlow(s,t,true);
+    }
+    int MaxFlow(int s, int t,bool increment=false)
+    {
+        int n = numberOfVertex;
+        bool hasData = (flowMap!=NULL);
+        if(flowMap==NULL)
+        {
+            flowMap = new int[n*n];
+        }
+        if(!increment || !hasData)
+        {
+            for(int i = 0; i < n; ++i)
+            {
+                for(int j=0; j < n; ++j)
+                {
+                    flowMap[i*n+j] = 0;
+                }
+            }
+            for(int i=0;i < n;++i)
+            {
+                for(tEIter eit = vertex[i].edge.begin();eit != vertex[i].edge.end();++eit)
+                {
+                    flowMap[i * n + eit->vertex] = eit->weight;
+                }
+            }
+        }
+        int augment;
+        int maxflow=0;
+        /*
+        while(MBFS(s,t))
+        {
+            maxflow += MDFS(s,t,MAXINT);
+        }
+        */
+        while((augment=getAugment(s,t))>0)
+        {
+            maxflow += augment;
+        }
+        return maxflow;
+    }
 	void printVertex()
 	{
 		for(int i=0; i < vertex.size(); ++i)
