@@ -428,7 +428,8 @@ public:
             {
                 for(tEIter eit = vertex[i].edge.begin();eit != vertex[i].edge.end();++eit)
                 {
-                    flowMap[i * n + eit->vertex] = eit->weight;
+                    //use += for multi edges between tow nodes
+                    flowMap[i * n + eit->vertex] += eit->weight;
                 }
             }
         }

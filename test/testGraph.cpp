@@ -138,6 +138,35 @@ void testMaxFlow()
         graph.addDirectEdge(0,3,10);
         assert(graph.MaxFlowIncrment(0,3)==10);
     }
+    {
+        kingo::Graph graph(6);
+        graph.addDirectEdge(0,1,10);
+        graph.addDirectEdge(1,2,10);
+        graph.addDirectEdge(2,5,10);
+        graph.addDirectEdge(1,4,6);
+        graph.addDirectEdge(4,5,6);
+        graph.addDirectEdge(0,3,8);
+        graph.addDirectEdge(3,2,6);
+        //for direct graph,must add inverted zero edge explicitly
+        graph.addDirectEdge(1,0,0);
+        graph.addDirectEdge(2,1,0);
+        graph.addDirectEdge(5,2,0);
+        graph.addDirectEdge(4,1,0);
+        graph.addDirectEdge(5,4,0);
+        graph.addDirectEdge(3,0,0);
+        graph.addDirectEdge(2,3,0);
+        assert(graph.MaxFlow(0,5)==16);
+    }
+    {
+        kingo::Graph graph(4);
+        graph.addEdge(0,1,100);
+        graph.addEdge(0,1,100);
+        graph.addEdge(0,1,100);
+        graph.addEdge(1,2,100);
+        graph.addEdge(1,2,100);
+        graph.addEdge(2,3,300);
+        assert(graph.MaxFlow(0,3)==200);
+    }
 }
 int main(int argc,char *argv[])
 {
